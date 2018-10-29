@@ -1,0 +1,55 @@
+-- 04.05.2017 17:10:08 AR V1.0a
+
+generic = {
+  parameter = {
+    gain = 0.1,
+  },
+
+  init = function(self)
+    block.setInputsPinCount(1)
+    block.setOutputsPinCount(1)
+    block.modifyFlags('SupressStartFunctionCall', true)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', 'Simple low pass', 'Integrator with scaled feedback')
+    gui.add('Edit', 'EditGain', 'Feedback gain')
+    gui.set('EditGain', self.parameter.gain)
+    gui.setSize()
+  end,
+
+  apply = function(self)
+    self.parameter.gain = gui.get('EditGain', 'Number')
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x50, "'\\xE2\\x97\\xA3' .. " .. self.parameter.gain)
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        local block = {}
+
+        block.step = function(a)
+          if not block.q then
+            block.q = a
+          end
+          block.q = block.q + (a - block.q) * GAIN
+          return block.q
+        end
+
+        return block
+      ]==]
+    local replaces = {
+      ['GAIN'] = self.parameter.gain
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+
+}
+
